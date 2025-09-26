@@ -1,8 +1,9 @@
-# AI-Hunting
 
-# Manual de uso — AI Hunting (Resumo rápido)
-
-[![Assista ao vídeo](https://img.youtube.com/vi/11sqkThyr_Q/0.jpg)](https://www.youtube.com/watch?v=11sqkThyr_Q)
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=11sqkThyr_Q">
+    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="Manual de uso — AI Hunting (Resumo rápido)" width="600">
+  </a>
+</p>
 
 ## 1. Visão geral
 
