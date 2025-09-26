@@ -2,6 +2,8 @@
 
 # Manual de uso — AI Hunting (Resumo rápido)
 
+[![Assista ao vídeo](https://img.youtube.com/vi/11sqkThyr_Q/0.jpg)](https://www.youtube.com/watch?v=11sqkThyr_Q)
+
 ## 1. Visão geral
 
 * Os scripts criam um diretório de logs na sua área de trabalho: `%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss`.
