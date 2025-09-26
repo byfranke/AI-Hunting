@@ -33,7 +33,7 @@ advanced IOC detection, cloud integration, and professional reporting.
 
 .NOTES
 Version: 1.3.1
-hhttps://github.com/byfranke/AI-Hunting
+https://github.com/byfranke/AI-Hunting
 Read-Host "Enter VT API Key" -AsSecureString | ConvertFrom-SecureString | Out-File "$env:USERPROFILE\.vtkey"
 PowerShell Policy: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 #>
@@ -50,5 +50,6 @@ if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
     Write-Host "PowerShell 7 not found. Installing..."
     winget install --id Microsoft.PowerShell --source winget --silent
 }
+
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "modules\ai-hunting.ps1")
