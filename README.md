@@ -1,167 +1,173 @@
-# Manual de uso — AI Hunting (Resumo rápido)
+# AI Hunting
+
 <p align="center">
   <a href="https://www.youtube.com/watch?v=11sqkThyr_Q">
-    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="Manual de uso — AI Hunting (Resumo rápido)" width="600">
+    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="User Manual — AI Hunting (Quick Summary)" width="600">
   </a>
 </p>
 
-## 1. Visão geral
+## 1. Overview
 
-* Os scripts criam um diretório de logs na sua área de trabalho: `%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss`.
-* Geram um relatório Excel: `threat_hunt_report.xlsx`.
-* Criam uma pasta de quarentena dentro do diretório de logs: `quarantine`.
-* Exigem execução como Administrador e PowerShell 7 (pwsh). Se pwsh não existir, tentam instalar via `winget`.
-* Chamam um módulo em `modules\ai-hunting.ps1` (verifique se existe e tem permissões).
+* The scripts create a logs directory on your desktop: `%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss`.
+* Generate an Excel report: `threat_hunt_report.xlsx`.
+* Create a quarantine folder inside the logs directory: `quarantine`.
+* Require execution as Administrator and PowerShell 7 (pwsh). If pwsh does not exist, they attempt to install it via `winget`.
+* Call a module in `modules\ai-hunting.ps1` (check if it exists and has permissions).
 
-## 2. Requisitos
+## 2. Requirements
 
-* Windows 10/11 atualizado.
-* Conta com privilégios de Administrador (ou capacidade de elevar).
-* PowerShell 7 (pwsh) preferencial — mas funcionam também em Windows PowerShell se adaptados.
-* Winget disponível (para instalação automática do PowerShell 7, se necessário).
-* Diretório `modules\` com `ai-hunting.ps1` presente no mesmo diretório dos scripts.
+* Updated Windows 10/11.
+* Account with Administrator privileges (or ability to elevate).
+* PowerShell 7 (pwsh) preferred — but they also work in Windows PowerShell if adapted.
+* Winget available (for automatic installation of PowerShell 7 if necessary).
+* `modules\` directory with `ai-hunting.ps1` present in the same directory as the scripts.
 
-## 3. Preparação (permissões e política de execução)
+## 3. Preparation (permissions and execution policy)
 
-Executar PowerShell como Administrador e rodar os comandos abaixo conforme o nível desejado.
+Run PowerShell as Administrator and execute the commands below according to the desired level.
 
-1. Permitir execução **temporária** apenas na sessão atual (recommended for testing):
+1. Allow execution **temporarily** only in the current session (recommended for testing):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\caminho\para\ai-hunting.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
 ```
 
-2. Definir política para o usuário atual (recomendado se for uso contínuo):
+2. Set policy for the current user (recommended for continuous use):
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-3. Definir política para a máquina inteira (requer Admin; menos seguro):
+3. Set policy for the entire machine (requires Admin; less secure):
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
 ```
 
-4. Desbloquear arquivo baixado (se necessário):
+4. Unblock downloaded file (if necessary):
 
 ```powershell
-Unblock-File -Path "C:\caminho\para\ai-hunting.ps1"
+Unblock-File -Path "C:\path\to\ai-hunting.ps1"
 ```
 
-5. Rodar um script **elevado** (executa como Administrador via UAC prompt):
+5. Run a script **elevated** (executes as Administrator via UAC prompt):
 
 ```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\caminho\para\ai-hunting.ps1"
+Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\path\to\ai-hunting.ps1"
 ```
 
-6. Instalar PowerShell 7 (se `pwsh` não existir):
+6. Install PowerShell 7 (if `pwsh` does not exist):
 
 ```powershell
 winget install --id Microsoft.PowerShell --source winget --silent
 ```
 
-7. Para desenvolvimento/testes — executar com bypass apenas na sessão (não muda política permanente):
+7. For development/testing — run with bypass only in session (does not change permanent policy):
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\caminho\para\ai-hunting.ps1"
+pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
 ```
 
-## 4. Como executar (exemplos práticos)
+## 4. How to run (practical examples)
 
-* Executar normalmente (PowerShell 5.x):
+* Run normally (PowerShell 5.x):
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
 ```
 
-* Executar com pwsh (PowerShell 7+):
+* Run with pwsh (PowerShell 7+):
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
 ```
 
-* Executar com elevação (abrir janela elevada automaticamente):
+* Run with elevation (automatically open elevated window):
 
 ```powershell
 Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"'
 ```
 
-## 5. Agendamento (ex.: agendar via Task Scheduler)
+## 5. Scheduling (e.g., schedule via Task Scheduler)
 
-* Agendar com `schtasks` (executa diariamente às 02:00 com privilégios elevados):
+* Schedule with `schtasks` (runs daily at 02:00 with elevated privileges):
 
 ```powershell
 schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
 ```
 
-## 6. Executar em background (serviço / NSSM)
+## 6. Run in background (service / NSSM)
 
-* Recomendo NSSM para transformar em serviço:
+* Recommended: NSSM to turn into a service:
 
-1. Baixe nssm.exe e copie para `C:\nssm\nssm.exe`.
-2. Instale serviço:
+1. Download nssm.exe and copy to `C:\nssm\nssm.exe`.
+2. Install service:
 
 ```powershell
 C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\""
 C:\nssm\nssm.exe start AIHunting
 ```
 
-## 7. Parâmetros e logs
+## 7. Parameters and logs
 
-* O script cria diretório `threat_hunt_YYYY-MM-DD_HH-mm-ss` no Desktop do usuário e gera:
+* The script creates `threat_hunt_YYYY-MM-DD_HH-mm-ss` directory on the user’s Desktop and generates:
 
   * `threat_hunt_report.xlsx`
-  * `quarantine\` contendo arquivos movidos para quarentena
-* Verifique variáveis no topo do script: ` $logDir`, `$outputExcel`, `$quarantineDir`, `$scriptStartTime`.
+  * `quarantine\` containing quarantined files
+* Check variables at the top of the script: `$logDir`, `$outputExcel`, `$quarantineDir`, `$scriptStartTime`.
 
-## 8. Boas práticas e segurança
+## 8. Best practices and security
 
-* Verifique conteúdo de `modules\ai-hunting.ps1` antes de rodar (audit).
-* Execute primeiro em ambiente isolado (máquina de teste) antes de produção.
-* Não defina `ExecutionPolicy` como `Unrestricted` globalmente em máquinas de produção.
-* Considere assinar o script com um certificado se for implantar em vários hosts:
+* Check contents of `modules\ai-hunting.ps1` before running (audit).
+* Run first in an isolated environment (test machine) before production.
+* Do not set `ExecutionPolicy` as `Unrestricted` globally on production machines.
+* Consider signing the script with a certificate if deploying across multiple hosts:
 
-  * Gerar certificado self-signed e assinar com `Set-AuthenticodeSignature`.
-* Backup dos logs antes de limpeza automática.
-* Se o script interage com rede/Internet, avalie regras de firewall e proxy.
+  * Generate self-signed certificate and sign with `Set-AuthenticodeSignature`.
+* Backup logs before automatic cleanup.
+* If the script interacts with network/Internet, evaluate firewall and proxy rules.
 
-## 9. Tratamento de erros comuns
+## 9. Common error handling
 
-* **Erro de permissão / Admin required** — abra PowerShell como Administrador ou use `Start-Process -Verb RunAs`.
-* **pwsh: comando não encontrado** — instale PowerShell 7 com `winget` (ou ajuste para `powershell.exe`).
-* **Módulo não encontrado (`modules\ai-hunting.ps1`)** — confirme que existe `modules` no mesmo diretório do script e que o arquivo possui permissões de leitura.
-* **Antivírus bloqueou** — revise detecção; não desative AV sem justificativa. Se for ferramenta interna, coloque em whitelist aprovada.
-* **Falha ao criar Excel** — verifique dependências (se usa COM Excel, precisa ter Excel instalado; se usa módulo para gerar XLSX, certifique-se do módulo `ImportExcel`).
+* **Permission error / Admin required** — open PowerShell as Administrator or use `Start-Process -Verb RunAs`.
+* **pwsh: command not found** — install PowerShell 7 with `winget` (or adjust to `powershell.exe`).
+* **Module not found (`modules\ai-hunting.ps1`)** — confirm `modules` exists in the same directory and file has read permissions.
+* **Antivirus blocked** — review detection; do not disable AV without justification. If internal tool, whitelist via approved process.
+* **Failed to create Excel** — check dependencies (if using COM Excel, Excel must be installed; if using module to generate XLSX, ensure `ImportExcel` module is installed).
 
-## 10. Exemplo completo (passo-a-passo rápido)
+## 10. Complete example (quick step-by-step)
 
-1. Copie os scripts para `C:\scripts`.
-2. Abra PowerShell como Administrador.
-3. Desbloqueie:
+1. Copy scripts to `C:\scripts`.
+2. Open PowerShell as Administrator.
+3. Unblock:
 
 ```powershell
 Unblock-File -Path "C:\scripts\ai-hunting.ps1"
 Unblock-File -Path "C:\scripts\setup.ps1"
 ```
 
-4. Ajuste ExecutionPolicy para current user:
+4. Adjust ExecutionPolicy for current user:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-5. Execute:
+5. Run:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
 ```
 
-6. Verifique a pasta `%USERPROFILE%\Desktop\threat_hunt_*` para relatórios e `quarantine`.
+6. Check folder `%USERPROFILE%\Desktop\threat_hunt_*` for reports and `quarantine`.
 
-## 11. Como verificar se o script rodou e localizar saídas
+## 11. How to verify script ran and find outputs
 
-* Abra Explorador → Desktop → procure `threat_hunt_` com timestamp.
-* Abra `threat_hunt_report.xlsx` (Excel ou LibreOffice).
-* Log do PowerShell (se implementado) — procure mensagens na saída do console; se quiser, modifique script para registrar um `run.log` dentro do `$logDir`.
+* Open Explorer → Desktop → look for `threat_hunt_` with timestamp.
+* Open `threat_hunt_report.xlsx` (Excel or LibreOffice).
+* PowerShell log (if implemented) — look for messages in console output; if desired, modify script to write a `run.log` inside `$logDir`.
 
+## Donation Support
+
+This tool is maintained through community support. Help keep it active:
+
+[![Donate](https://img.shields.io/badge/Support-Development-blue?style=for-the-badge&logo=github)](https://donate.stripe.com/28o8zQ2wY3Dr57G001)
