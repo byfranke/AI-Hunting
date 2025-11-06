@@ -1,8 +1,8 @@
 # AI Hunting
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=11sqkThyr_Q">
-    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="User Manual — AI Hunting (Quick Summary)" width="600">
+  <a href="https://www.youtube.com/watch?v=11sqkThyr_Q=">
+    <img src="https://img.youtube.com/vi/11sqkThyr_Q=/maxresdefault.jpg" alt="User Manual — AI Hunting (Quick Summary)" width="600">
   </a>
 </p>
 
