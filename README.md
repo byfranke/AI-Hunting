@@ -1,173 +1,326 @@
-# AI Hunting
+# AI-Hunting Dashboard
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=11sqkThyr_Q">
-    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="User Manual — AI Hunting (Quick Summary)" width="600">
-  </a>
-</p>
+<div align="center">
 
-## 1. Overview
-
-* The scripts create a logs directory on your desktop: `%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss`.
-* Generate an Excel report: `threat_hunt_report.xlsx`.
-* Create a quarantine folder inside the logs directory: `quarantine`.
-* Require execution as Administrator and PowerShell 7 (pwsh). If pwsh does not exist, they attempt to install it via `winget`.
-* Call a module in `modules\ai-hunting.ps1` (check if it exists and has permissions).
-
-## 2. Requirements
-
-* Updated Windows 10/11.
-* Account with Administrator privileges (or ability to elevate).
-* PowerShell 7 (pwsh) preferred — but they also work in Windows PowerShell if adapted.
-* Winget available (for automatic installation of PowerShell 7 if necessary).
-* `modules\` directory with `ai-hunting.ps1` present in the same directory as the scripts.
-
-## 3. Preparation (permissions and execution policy)
-
-Run PowerShell as Administrator and execute the commands below according to the desired level.
-
-1. Allow execution **temporarily** only in the current session (recommended for testing):
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
+```
+     █████╗ ██╗      ██╗  ██╗██╗   ██╗███╗   ██╗████████╗
+    ██╔══██╗██║      ██║  ██║██║   ██║████╗  ██║╚══██╔══╝
+    ███████║██║█████╗███████║██║   ██║██╔██╗ ██║   ██║
+    ██╔══██║██║╚════╝██╔══██║██║   ██║██║╚██╗██║   ██║
+    ██║  ██║██║      ██║  ██║╚██████╔╝██║ ╚████║   ██║
+    ╚═╝  ╚═╝╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝
 ```
 
-2. Set policy for the current user (recommended for continuous use):
+**Enterprise Threat Hunting Web Application**
 
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/byfranke/AI-Hunting)
+[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+
+[Features](#features) | [Installation](#installation) | [Usage](#usage) | [API Reference](#api-reference)
+
+</div>
+
+---
+
+## Overview
+
+AI-Hunting Dashboard is an enterprise-grade threat hunting and incident response platform. It provides a modern web interface for automated security forensics, malware detection, and comprehensive reporting.
+
+The dashboard integrates with:
+- **VirusTotal API** - Malware reputation checking
+- **LOLBAS Project** - Living Off The Land Binaries detection
+- **Windows Event Logs** - Security event analysis
+- **Registry Analysis** - Persistence mechanism detection
+
+## Features
+
+### Security Analysis
+- Windows Services enumeration and analysis
+- SHA256 hash computation for service binaries
+- VirusTotal integration for malware detection
+- LOLBAS pattern detection
+- Registry startup entry analysis
+- Scheduled tasks enumeration
+- Driver enumeration
+- Security event log analysis
+
+### Dashboard
+- Modern, responsive web interface with dark theme
+- Real-time scan progress via WebSocket
+- Interactive data tables with search and filtering
+- Threat distribution visualization
+- Export results to JSON
+- Scan history tracking
+
+### Architecture
+- **Backend**: Python FastAPI with async support
+- **Frontend**: Vanilla HTML5, CSS3, JavaScript
+- **Data Collection**: PowerShell modules
+- **Communication**: WebSocket for real-time updates
+- **API**: RESTful endpoints with OpenAPI documentation
+
+## Installation
+
+### Prerequisites
+
+- Python 3.9 or higher
+- Windows 10/11 (for full functionality)
+- Administrator privileges (for service enumeration)
+- VirusTotal API key (optional, for VT integration)
+
+### Quick Start (Windows)
+
+1. **Clone the repository**
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+git clone https://github.com/byfranke/AI-Hunting.git
+cd AI-Hunting
 ```
 
-3. Set policy for the entire machine (requires Admin; less secure):
-
+2. **Run the setup script**
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
+.\setup.ps1
 ```
 
-4. Unblock downloaded file (if necessary):
+This will:
+- Check Python installation
+- Create a virtual environment
+- Install dependencies
+- Start the dashboard
 
-```powershell
-Unblock-File -Path "C:\path\to\ai-hunting.ps1"
+3. **Access the dashboard**
+```
+http://127.0.0.1:8080
 ```
 
-5. Run a script **elevated** (executes as Administrator via UAC prompt):
+### Manual Installation
 
-```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\path\to\ai-hunting.ps1"
+1. **Create virtual environment**
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 ```
 
-6. Install PowerShell 7 (if `pwsh` does not exist):
-
-```powershell
-winget install --id Microsoft.PowerShell --source winget --silent
+2. **Install dependencies**
+```bash
+pip install -r requirements.txt
 ```
 
-7. For development/testing — run with bypass only in session (does not change permanent policy):
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
+3. **Configure environment (optional)**
+```bash
+cp .env.example .env
+# Edit .env with your settings
 ```
 
-## 4. How to run (practical examples)
-
-* Run normally (PowerShell 5.x):
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
+4. **Start the server**
+```bash
+python start.py
 ```
 
-* Run with pwsh (PowerShell 7+):
+### Configuration Options
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--host` | Server bind address | 127.0.0.1 |
+| `--port` | Server port | 8080 |
+| `--debug` | Enable debug mode | false |
+| `--no-browser` | Don't open browser | false |
+
+Example:
+```bash
+python start.py --host 0.0.0.0 --port 9000 --debug
 ```
 
-* Run with elevation (automatically open elevated window):
+## Usage
 
-```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"'
+### Starting a Scan
+
+1. Navigate to the **Dashboard** or **Scanner** section
+2. Configure scan options (VirusTotal, Registry, Tasks, etc.)
+3. Click **Start Scan**
+4. Monitor progress in real-time
+5. Review results in the **Results** section
+
+### Configuring VirusTotal
+
+1. Go to **Settings**
+2. Enter your VirusTotal API key
+3. Click **Save API Key**
+
+Get your API key from: https://www.virustotal.com/gui/my-apikey
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+S` | Start quick scan |
+| `Escape` | Close modal |
+
+## API Reference
+
+The dashboard exposes a RESTful API. Full documentation available at `/docs` when running.
+
+### Endpoints
+
+#### System
+- `GET /api/status` - System status
+- `GET /api/config` - Configuration
+
+#### Scanning
+- `POST /api/scan/start` - Start new scan
+- `GET /api/scan/status` - Current scan status
+- `POST /api/scan/cancel` - Cancel scan
+- `GET /api/scan/history` - Scan history
+
+#### VirusTotal
+- `POST /api/virustotal/check` - Check single hash
+- `POST /api/config/virustotal` - Set API key
+
+#### LOLBAS
+- `GET /api/lolbas/status` - Database status
+- `POST /api/lolbas/reload` - Reload database
+- `GET /api/lolbas/search` - Search database
+
+### WebSocket
+
+Connect to `/ws` for real-time updates:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8080/ws');
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log(data);
+};
+
+// Start scan
+ws.send(JSON.stringify({
+    type: 'start_scan',
+    options: {
+        check_virustotal: true,
+        check_registry: true
+    }
+}));
 ```
 
-## 5. Scheduling (e.g., schedule via Task Scheduler)
+## Project Structure
 
-* Schedule with `schtasks` (runs daily at 02:00 with elevated privileges):
-
-```powershell
-schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
+```
+AI-Hunting/
+├── app/
+│   ├── api/
+│   │   ├── routes.py       # API endpoints
+│   │   └── websocket.py    # WebSocket handlers
+│   ├── core/
+│   │   ├── config.py       # Configuration
+│   │   └── scanner.py      # Scanner orchestration
+│   ├── services/
+│   │   ├── virustotal.py   # VT integration
+│   │   └── lolbas.py       # LOLBAS detection
+│   ├── static/
+│   │   ├── css/style.css   # Styles
+│   │   ├── js/app.js       # JavaScript
+│   │   └── index.html      # Dashboard
+│   └── main.py             # FastAPI application
+├── scripts/
+│   └── collector.ps1       # PowerShell collector
+├── modules/
+│   └── ai-hunting.ps1      # Legacy PowerShell module
+├── data/                   # Scan data storage
+├── logs/                   # Application logs
+├── requirements.txt        # Python dependencies
+├── setup.ps1              # PowerShell setup
+├── setup.bat              # Windows batch setup
+├── start.py               # Application launcher
+└── README.md              # Documentation
 ```
 
-## 6. Run in background (service / NSSM)
+## Detection Capabilities
 
-* Recommended: NSSM to turn into a service:
+### VirusTotal Integration
+- SHA256 hash reputation checking
+- Classification: CLEAN, SUSPICIOUS, CRITICAL
+- Detection count from 90+ antivirus engines
+- Result caching to minimize API calls
 
-1. Download nssm.exe and copy to `C:\nssm\nssm.exe`.
-2. Install service:
+### LOLBAS Detection
+- Detection of legitimate binaries used in attacks
+- Includes: certutil, mshta, regsvr32, rundll32, etc.
+- Regular database updates from LOLBAS project
 
-```powershell
-C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\""
-C:\nssm\nssm.exe start AIHunting
-```
+### Registry Analysis
+- Run keys (HKLM and HKCU)
+- RunOnce keys
+- WOW6432Node entries
 
-## 7. Parameters and logs
+### Event Analysis
+- Service installation events (7045)
+- Service configuration changes (7040)
+- Process creation (4688)
+- Service installation via Security log (4697)
 
-* The script creates `threat_hunt_YYYY-MM-DD_HH-mm-ss` directory on the user’s Desktop and generates:
+## Legacy PowerShell Module
 
-  * `threat_hunt_report.xlsx`
-  * `quarantine\` containing quarantined files
-* Check variables at the top of the script: `$logDir`, `$outputExcel`, `$quarantineDir`, `$scriptStartTime`.
-
-## 8. Best practices and security
-
-* Check contents of `modules\ai-hunting.ps1` before running (audit).
-* Run first in an isolated environment (test machine) before production.
-* Do not set `ExecutionPolicy` as `Unrestricted` globally on production machines.
-* Consider signing the script with a certificate if deploying across multiple hosts:
-
-  * Generate self-signed certificate and sign with `Set-AuthenticodeSignature`.
-* Backup logs before automatic cleanup.
-* If the script interacts with network/Internet, evaluate firewall and proxy rules.
-
-## 9. Common error handling
-
-* **Permission error / Admin required** — open PowerShell as Administrator or use `Start-Process -Verb RunAs`.
-* **pwsh: command not found** — install PowerShell 7 with `winget` (or adjust to `powershell.exe`).
-* **Module not found (`modules\ai-hunting.ps1`)** — confirm `modules` exists in the same directory and file has read permissions.
-* **Antivirus blocked** — review detection; do not disable AV without justification. If internal tool, whitelist via approved process.
-* **Failed to create Excel** — check dependencies (if using COM Excel, Excel must be installed; if using module to generate XLSX, ensure `ImportExcel` module is installed).
-
-## 10. Complete example (quick step-by-step)
-
-1. Copy scripts to `C:\scripts`.
-2. Open PowerShell as Administrator.
-3. Unblock:
+The original PowerShell-only version is still available in `modules/ai-hunting.ps1`. To use it directly:
 
 ```powershell
-Unblock-File -Path "C:\scripts\ai-hunting.ps1"
-Unblock-File -Path "C:\scripts\setup.ps1"
+pwsh -NoProfile -ExecutionPolicy Bypass -File ".\modules\ai-hunting.ps1"
 ```
 
-4. Adjust ExecutionPolicy for current user:
+This generates Excel reports with:
+- VirusTotal findings
+- LOLBAS alerts
+- Driver audit
+- Recent services
+- Startup registry entries
+- Scheduled tasks
+- Windows Event Log analysis
 
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+## Security Considerations
 
-5. Run:
+- Run with appropriate privileges for full functionality
+- The dashboard binds to localhost by default
+- API keys are stored in environment variables
+- No sensitive data is transmitted to external services except VirusTotal hashes
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
-```
+## Contributing
 
-6. Check folder `%USERPROFILE%\Desktop\threat_hunt_*` for reports and `quarantine`.
+Contributions are welcome. Please feel free to submit a Pull Request.
 
-## 11. How to verify script ran and find outputs
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-* Open Explorer → Desktop → look for `threat_hunt_` with timestamp.
-* Open `threat_hunt_report.xlsx` (Excel or LibreOffice).
-* PowerShell log (if implemented) — look for messages in console output; if desired, modify script to write a `run.log` inside `$logDir`.
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**byFranke**
+- Website: [byfranke.com](https://byfranke.com)
+- GitHub: [@byfranke](https://github.com/byfranke)
+- Email: contact@byfranke.com
+
+## Acknowledgments
+
+- [VirusTotal](https://www.virustotal.com/) for malware intelligence
+- [LOLBAS Project](https://lolbas-project.github.io/) for attack pattern database
+- [FastAPI](https://fastapi.tiangolo.com/) for the web framework
 
 ## Donation Support
 
 This tool is maintained through community support. Help keep it active:
 
 [![Donate](https://img.shields.io/badge/Support-Development-blue?style=for-the-badge&logo=github)](https://buy.byfranke.com/b/8wM03kb3u7THeIgaEE)
+
+---
+
+<div align="center">
+
+**AI-Hunting Dashboard** - Enterprise Threat Hunting Made Simple
+
+</div>

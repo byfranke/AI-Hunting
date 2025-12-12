@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Hunting Dashboard | Enterprise Threat Hunting</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+                <span class="logo-text">AI-Hunting</span>
+            </div>
+            <span class="version">v2.0.0</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-section="scanner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <span>Scanner</span>
+            </a>
+            <a href="#" class="nav-item" data-section="results">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M16 13H8"/>
+                    <path d="M16 17H8"/>
+                    <path d="M10 9H8"/>
+                </svg>
+                <span>Results</span>
+            </a>
+            <a href="#" class="nav-item" data-section="services">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+                <span>Services</span>
+            </a>
+            <a href="#" class="nav-item" data-section="lolbas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <path d="M12 9v4"/>
+                    <path d="M12 17h.01"/>
+                </svg>
+                <span>LOLBAS</span>
+            </a>
+            <a href="#" class="nav-item" data-section="history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <span>History</span>
+            </a>
+            <a href="#" class="nav-item" data-section="settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+            <a href="https://byfranke.com" target="_blank" class="author-link">by Franke</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12h18M3 6h18M3 18h18"/>
+                    </svg>
+                </button>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="scan-indicator" id="scanIndicator" style="display: none;">
+                    <div class="scan-spinner"></div>
+                    <span>Scanning...</span>
+                </div>
+                <button class="btn btn-primary" id="quickScanBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    Start Scan
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Sections -->
+        <div class="content">
+            <!-- Dashboard Section -->
+            <section class="section active" id="section-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <path d="M8 21h8"/>
+                                <path d="M12 17v4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statServices">0</span>
+                            <span class="stat-label">Services Scanned</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                <path d="M12 9v4"/>
+                                <path d="M12 17h.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statCritical">0</span>
+                            <span class="stat-label">Critical Threats</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-yellow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v4"/>
+                                <path d="M12 16h.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statSuspicious">0</span>
+                            <span class="stat-label">Suspicious Files</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                <path d="M22 4L12 14.01l-3-3"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statClean">0</span>
+                            <span class="stat-label">Clean Files</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Scan Progress</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-container" id="progressContainer">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-info">
+                                    <span class="progress-phase" id="progressPhase">Ready to scan</span>
+                                    <span class="progress-percent" id="progressPercent">0%</span>
+                                </div>
+                            </div>
+                            <div class="scan-log" id="scanLog">
+                                <div class="log-entry">System initialized. Ready for threat hunting.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Threat Distribution</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="threatChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="chartLegend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #10b981"></span>
+                                    <span>Clean</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #f59e0b"></span>
+                                    <span>Suspicious</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #ef4444"></span>
+                                    <span>Critical</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Detections</h3>
+                        <button class="btn btn-secondary btn-sm" id="exportResultsBtn">Export</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table" id="detectionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Severity</th>
+                                        <th>File Name</th>
+                                        <th>Path</th>
+                                        <th>Detection</th>
+                                        <th>Hash</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detectionsBody">
+                                    <tr class="empty-row">
+                                        <td colspan="5">No detections yet. Start a scan to analyze your system.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scanner Section -->
+            <section class="section" id="section-scanner">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Scan Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="scanForm" class="scan-form">
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="check_virustotal" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="label-text">
+                                        <strong>VirusTotal Integration</strong>
+                                        <small>Check file hashes against VirusTotal database</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="check_registry" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="label-text">
+                                        <strong>Registry Analysis</strong>
+                                        <small>Scan startup registry entries for persistence</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="check_tasks" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="label-text">
+                                        <strong>Scheduled Tasks</strong>
+                                        <small>Enumerate and analyze scheduled tasks</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="check_events" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="label-text">
+                                        <strong>Event Log Analysis</strong>
+                                        <small>Check Windows Event Logs for service installations</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="check_drivers" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="label-text">
+                                        <strong>Driver Enumeration</strong>
+                                        <small>List and analyze loaded system drivers</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                    Start Full Scan
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg" id="cancelScanBtn" disabled>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    </svg>
+                                    Cancel Scan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="section" id="section-results">
+                <div class="results-tabs">
+                    <button class="tab-btn active" data-tab="virustotal">VirusTotal Results</button>
+                    <button class="tab-btn" data-tab="lolbas-results">LOLBAS Matches</button>
+                    <button class="tab-btn" data-tab="registry-results">Registry</button>
+                    <button class="tab-btn" data-tab="tasks-results">Scheduled Tasks</button>
+                    <button class="tab-btn" data-tab="events-results">Events</button>
+                    <button class="tab-btn" data-tab="drivers-results">Drivers</button>
+                </div>
+
+                <div class="tab-content active" id="tab-virustotal">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>VirusTotal Analysis</h3>
+                            <div class="header-actions">
+                                <input type="text" class="search-input" placeholder="Search..." id="vtSearch">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>File</th>
+                                            <th>Detections</th>
+                                            <th>Hash (SHA256)</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vtResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="5">No results available. Run a scan first.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-lolbas-results">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>LOLBAS Detections</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Binary</th>
+                                            <th>Service</th>
+                                            <th>Description</th>
+                                            <th>Path</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lolbasResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="4">No LOLBAS matches found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-registry-results">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Registry Startup Entries</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Key Path</th>
+                                            <th>Name</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registryResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="3">No registry entries found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-tasks-results">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Scheduled Tasks</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Task Name</th>
+                                            <th>Path</th>
+                                            <th>State</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tasksResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="4">No scheduled tasks found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-events-results">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Security Events</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Event ID</th>
+                                            <th>Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eventsResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="3">No events found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-drivers-results">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>System Drivers</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Display Name</th>
+                                            <th>State</th>
+                                            <th>Path</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="driversResultsBody">
+                                        <tr class="empty-row">
+                                            <td colspan="4">No drivers found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section class="section" id="section-services">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Windows Services</h3>
+                        <div class="header-actions">
+                            <input type="text" class="search-input" placeholder="Search services..." id="servicesSearch">
+                            <select class="filter-select" id="servicesFilter">
+                                <option value="all">All States</option>
+                                <option value="Running">Running</option>
+                                <option value="Stopped">Stopped</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Display Name</th>
+                                        <th>State</th>
+                                        <th>Start Mode</th>
+                                        <th>Path</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesBody">
+                                    <tr class="empty-row">
+                                        <td colspan="5">No services data available.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOLBAS Section -->
+            <section class="section" id="section-lolbas">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>LOLBAS Database</h3>
+                        <div class="header-actions">
+                            <input type="text" class="search-input" placeholder="Search LOLBAS..." id="lolbasSearch">
+                            <button class="btn btn-secondary btn-sm" id="reloadLolbasBtn">Reload Database</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="lolbas-stats" id="lolbasStats">
+                            <div class="stat-mini">
+                                <span class="stat-mini-value" id="lolbasCount">0</span>
+                                <span class="stat-mini-label">Total Entries</span>
+                            </div>
+                            <div class="stat-mini">
+                                <span class="stat-mini-value" id="lolbasLastUpdate">Never</span>
+                                <span class="stat-mini-label">Last Updated</span>
+                            </div>
+                        </div>
+                        <div class="lolbas-grid" id="lolbasGrid">
+                            <!-- LOLBAS entries will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section class="section" id="section-history">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Scan History</h3>
+                        <button class="btn btn-secondary btn-sm" id="clearHistoryBtn">Clear History</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Scan ID</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Services</th>
+                                        <th>Threats</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyBody">
+                                    <tr class="empty-row">
+                                        <td colspan="6">No scan history available.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="section" id="section-settings">
+                <div class="settings-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>VirusTotal API</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="vtApiForm">
+                                <div class="form-group">
+                                    <label for="vtApiKey">API Key</label>
+                                    <div class="input-group">
+                                        <input type="password" id="vtApiKey" class="form-input" placeholder="Enter your VirusTotal API key">
+                                        <button type="button" class="btn btn-icon" id="toggleVtKey">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <small class="form-hint">Get your API key from <a href="https://www.virustotal.com/gui/my-apikey" target="_blank">VirusTotal</a></small>
+                                </div>
+                                <div class="form-group">
+                                    <div class="api-status" id="vtStatus">
+                                        <span class="status-indicator"></span>
+                                        <span class="status-text">Not configured</span>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save API Key</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Scan Thresholds</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="suspiciousThreshold">Suspicious Threshold</label>
+                                <input type="number" id="suspiciousThreshold" class="form-input" value="3" min="1" max="10">
+                                <small class="form-hint">Number of VT detections to mark as suspicious</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="criticalThreshold">Critical Threshold</label>
+                                <input type="number" id="criticalThreshold" class="form-input" value="10" min="5" max="50">
+                                <small class="form-hint">Number of VT detections to mark as critical</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>System Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-list">
+                                <div class="info-item">
+                                    <span class="info-label">Application Version</span>
+                                    <span class="info-value" id="appVersion">2.0.0</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Backend Status</span>
+                                    <span class="info-value" id="backendStatus">Checking...</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">WebSocket Status</span>
+                                    <span class="info-value" id="wsStatus">Disconnected</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">LOLBAS Database</span>
+                                    <span class="info-value" id="lolbasStatus">Not loaded</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>About</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="about-info">
+                                <p><strong>AI-Hunting Dashboard</strong></p>
+                                <p>Enterprise Threat Hunting Web Application</p>
+                                <p>Author: <a href="https://byfranke.com" target="_blank">byFranke</a></p>
+                                <p>License: MIT</p>
+                                <p class="mt-2">
+                                    <a href="https://github.com/byfranke/AI-Hunting" target="_blank" class="btn btn-secondary btn-sm">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                        </svg>
+                                        GitHub Repository
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content" id="modalContent">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
