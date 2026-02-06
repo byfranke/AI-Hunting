@@ -477,63 +477,96 @@ function Invoke-SheepAIAnalysis {
         $_.Executable -notmatch '(?i)system32|program files|windowsapps'
     }
     
-    # Build the question for Sheep AI
-    $analysisContext = @"
-Analyze the following threat hunting findings from a Windows system:
-
-=== VIRUSTOTAL FINDINGS ===
-Total Scanned: $($ReportData.VTFindings.Count)
-Critical/Suspicious: $($criticalFindings.Count)
-$(if ($criticalFindings.Count -gt 0) {
-    $criticalFindings | ForEach-Object { 
-        "- $($_.ServiceName): $($_.BinaryPath) - Status: $($_.VTStatus)" 
-    } | Out-String
-} else { "No critical findings." })
-
-=== LOLBAS MATCHES ===
-$(if ($lolbasAlerts.Count -gt 0) {
-    $lolbasAlerts | ForEach-Object { 
-        "- $($_.ServiceName): $($_.BinaryPath)" 
-    } | Out-String
-} else { "No LOLBAS matches detected." })
-
-=== RECENT SERVICES (Last 30 min) ===
-$(if ($recentServices.Count -gt 0) {
-    $recentServices | ForEach-Object { 
-        "- $($_.Name): $($_.PathName) - Started by: $($_.StartName)" 
-    } | Out-String
-} else { "No recent service installations." })
-
-=== SUSPICIOUS STARTUP ENTRIES ===
-$(if ($suspiciousStartup.Count -gt 0) {
-    $suspiciousStartup | ForEach-Object { 
-        "- $($_.EntryName): $($_.CommandLine)" 
-    } | Out-String
-} else { "No suspicious startup entries." })
-
-Based on this data, provide:
-1. Threat assessment summary
-2. Identified TTPs (MITRE ATT&CK mapping if applicable)
-3. Potential APT indicators
-4. Recommended remediation steps
-5. Priority actions for incident response
-"@
+    # Build findings sections safely (avoid null/empty issues)
+    $vtSection = "Total Scanned: $($ReportData.VTFindings.Count)`nCritical/Suspicious: $($criticalFindings.Count)"
+    if ($criticalFindings.Count -gt 0) {
+        $criticalList = ($criticalFindings | ForEach-Object { 
+            "- $($_.ServiceName): $($_.BinaryPath) - Status: $($_.VTStatus)" 
+        }) -join "`n"
+        $vtSection += "`n$criticalList"
+    } else {
+        $vtSection += "`nNo critical findings."
+    }
+    
+    $lolbasSection = if ($lolbasAlerts.Count -gt 0) {
+        ($lolbasAlerts | ForEach-Object { "- $($_.ServiceName): $($_.BinaryPath)" }) -join "`n"
+    } else { "No LOLBAS matches detected." }
+    
+    $recentSection = if ($recentServices.Count -gt 0) {
+        ($recentServices | ForEach-Object { "- $($_.Name): $($_.PathName) - Started by: $($_.StartName)" }) -join "`n"
+    } else { "No recent service installations." }
+    
+    $startupSection = if ($suspiciousStartup.Count -gt 0) {
+        ($suspiciousStartup | ForEach-Object { "- $($_.EntryName): $($_.CommandLine)" }) -join "`n"
+    } else { "No suspicious startup entries." }
+    
+    # Build the question for Sheep AI (clean string, no here-string interpolation issues)
+    $analysisContext = @(
+        "Analyze the following threat hunting findings from a Windows system:",
+        "",
+        "=== VIRUSTOTAL FINDINGS ===",
+        $vtSection,
+        "",
+        "=== LOLBAS MATCHES ===",
+        $lolbasSection,
+        "",
+        "=== RECENT SERVICES (Last 30 min) ===",
+        $recentSection,
+        "",
+        "=== SUSPICIOUS STARTUP ENTRIES ===",
+        $startupSection,
+        "",
+        "Based on this data, provide:",
+        "1. Threat assessment summary",
+        "2. Identified TTPs (MITRE ATT&CK mapping if applicable)",
+        "3. Potential APT indicators",
+        "4. Recommended remediation steps",
+        "5. Priority actions for incident response"
+    ) -join "`n"
     
     try {
-        $body = @{
+        # Build request body as hashtable and convert to JSON with proper encoding
+        $requestBody = @{
             question = $analysisContext
-        } | ConvertTo-Json -Depth 10
+        }
+        
+        $jsonBody = $requestBody | ConvertTo-Json -Depth 10 -Compress
+        $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($jsonBody)
         
         $response = Invoke-RestMethod -Uri "https://sheep.byfranke.com/api/ai/ask" `
             -Method POST `
-            -Headers @{ "X-API-Token" = $SheepToken; "Content-Type" = "application/json" } `
-            -Body $body `
+            -Headers @{ 
+                "X-API-Token" = $SheepToken
+                "Content-Type" = "application/json; charset=utf-8"
+            } `
+            -Body $bodyBytes `
             -TimeoutSec 120
         
         return $response
     }
     catch {
-        Write-Host "Failed to connect to Sheep AI: $($_.Exception.Message)" -ForegroundColor Red
+        $statusCode = $null
+        $errorDetails = $_.Exception.Message
+        
+        if ($_.Exception.Response) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+            try {
+                $reader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+                $errorDetails = $reader.ReadToEnd()
+                $reader.Close()
+            } catch { }
+        }
+        
+        Write-Host "Failed to connect to Sheep AI (HTTP $statusCode): $errorDetails" -ForegroundColor Red
+        
+        if ($statusCode -eq 400) {
+            Write-Host "Hint: This may indicate an invalid token or malformed request." -ForegroundColor Yellow
+        } elseif ($statusCode -eq 401 -or $statusCode -eq 403) {
+            Write-Host "Hint: Check if your Sheep API token is valid." -ForegroundColor Yellow
+        } elseif ($statusCode -eq 429) {
+            Write-Host "Hint: Rate limit exceeded. Try again later." -ForegroundColor Yellow
+        }
+        
         return $null
     }
 }
@@ -773,11 +806,44 @@ try {
         ErrorAction   = 'Stop'
     }
 
+    # Filter out empty sections before export
+    $sectionsToExport = [ordered]@{}
     $reportSections.GetEnumerator() | ForEach-Object {
-        if ($_.Value -is [array] -and $_.Value.Count -gt 0) {
-            $_.Value | Export-Excel @excelParams -WorksheetName $_.Key
+        $sectionData = $_.Value
+        $hasData = $false
+        
+        if ($sectionData -is [array] -and $sectionData.Count -gt 0) {
+            $hasData = $true
+        } elseif ($sectionData -is [PSCustomObject]) {
+            $hasData = $true
+        } elseif ($sectionData -and $sectionData -isnot [array]) {
+            $hasData = $true
+        }
+        
+        if ($hasData) {
+            $sectionsToExport[$_.Key] = $sectionData
         } else {
-            Write-Warning "No data for worksheet: $($_.Key)"
+            Write-Warning "Skipping empty worksheet: $($_.Key)"
+        }
+    }
+
+    # Check if Excel file is already open/locked
+    if (Test-Path $outputExcel) {
+        try {
+            $fileStream = [System.IO.File]::Open($outputExcel, 'Open', 'ReadWrite', 'None')
+            $fileStream.Close()
+        } catch {
+            Write-Warning "Excel file may be open in another application. Generating with timestamp..."
+            $outputExcel = $outputExcel -replace '\.xlsx$', "_$(Get-Date -Format 'HHmmss').xlsx"
+        }
+    }
+
+    # Export each section
+    $sectionsToExport.GetEnumerator() | ForEach-Object {
+        try {
+            $_.Value | Export-Excel @excelParams -WorksheetName $_.Key
+        } catch {
+            Write-Warning "Failed to export worksheet '$($_.Key)': $($_.Exception.Message)"
         }
     }
     
@@ -787,8 +853,24 @@ try {
         throw "Excel file creation failed"
     }
 } catch {
-    Write-Host "FATAL ERROR: Failed to generate report - $($_.Exception.Message)" -ForegroundColor Red
-    exit 1
+    Write-Host "ERROR: Failed to generate Excel report - $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Attempting CSV fallback..." -ForegroundColor Yellow
+    
+    # Fallback: Export to CSV files
+    try {
+        $csvDir = Join-Path $logDir "csv_reports"
+        New-Item -Path $csvDir -ItemType Directory -Force | Out-Null
+        
+        $reportSections.GetEnumerator() | ForEach-Object {
+            if ($_.Value -and (($_.Value -is [array] -and $_.Value.Count -gt 0) -or $_.Value -is [PSCustomObject])) {
+                $csvPath = Join-Path $csvDir "$($_.Key -replace '\s+','_').csv"
+                $_.Value | Export-Csv -Path $csvPath -NoTypeInformation -Force
+            }
+        }
+        Write-Host "CSV reports generated in: $csvDir" -ForegroundColor Green
+    } catch {
+        Write-Host "CSV fallback also failed: $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 # Phase 5: Sheep AI Threat Intelligence Integration

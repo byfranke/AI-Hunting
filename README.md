@@ -110,13 +110,24 @@ AI-Hunting is an enterprise-grade threat hunting automation tool designed for Wi
 
 ### 4.1 Initial Setup
 
-1. Download or clone the repository to your preferred location (e.g., `C:\scripts\AI-Hunting`)
-
-2. Unblock the downloaded files:
+1. Download or clone the repository to your preferred location:
 
 ```powershell
-Unblock-File -Path "C:\scripts\AI-Hunting\setup.ps1"
-Unblock-File -Path "C:\scripts\AI-Hunting\modules\ai-hunting.ps1"
+# Example locations (choose your preferred path):
+# C:\Tools\AI-Hunting
+# D:\Security\AI-Hunting
+# %USERPROFILE%\Documents\AI-Hunting
+
+git clone https://github.com/byfranke/AI-Hunting.git
+cd AI-Hunting
+```
+
+2. Unblock the downloaded files (adjust path to your installation):
+
+```powershell
+# Replace <YourPath> with your actual installation directory
+Unblock-File -Path "<YourPath>\AI-Hunting\setup.ps1"
+Unblock-File -Path "<YourPath>\AI-Hunting\modules\ai-hunting.ps1"
 ```
 
 3. Set execution policy for the current user:
@@ -130,7 +141,9 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 Run `setup.ps1` as Administrator to access the configuration interface:
 
 ```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\scripts\AI-Hunting\setup.ps1"
+# Navigate to your AI-Hunting directory and run setup
+cd "<YourPath>\AI-Hunting"
+Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',".\setup.ps1"
 ```
 
 The configuration menu provides the following options:
@@ -179,7 +192,9 @@ All credentials are stored securely in `%USERPROFILE%\.hunting\config.json`:
 **Via Configuration Menu (Recommended):**
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\setup.ps1"
+# Navigate to your AI-Hunting directory
+cd "<YourPath>\AI-Hunting"
+pwsh -NoProfile -ExecutionPolicy Bypass -File ".\setup.ps1"
 ```
 
 Select option `[5] Run AI-Hunting Scan`
@@ -187,13 +202,15 @@ Select option `[5] Run AI-Hunting Scan`
 **Direct Execution:**
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\modules\ai-hunting.ps1"
+cd "<YourPath>\AI-Hunting"
+pwsh -NoProfile -ExecutionPolicy Bypass -File ".\modules\ai-hunting.ps1"
 ```
 
 ### 5.2 Elevated Execution
 
 ```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\setup.ps1"'
+cd "<YourPath>\AI-Hunting"
+Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File ".\setup.ps1"'
 ```
 
 ### 5.3 Execution Phases
@@ -217,7 +234,8 @@ The scan executes in five sequential phases:
 Configure daily automated scans at 02:00 with elevated privileges:
 
 ```powershell
-schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\AI-Hunting\modules\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
+# Replace <YourPath> with your actual installation directory (use full absolute path)
+schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"<YourPath>\AI-Hunting\modules\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
 ```
 
 ### 6.2 Windows Service (NSSM)
@@ -226,10 +244,10 @@ For continuous operation, deploy as a Windows service:
 
 1. Download NSSM and place in `C:\nssm\nssm.exe`
 
-2. Install and start the service:
+2. Install and start the service (replace `<YourPath>` with your installation directory):
 
 ```powershell
-C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\AI-Hunting\modules\ai-hunting.ps1\""
+C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"<YourPath>\AI-Hunting\modules\ai-hunting.ps1\""
 C:\nssm\nssm.exe start AIHunting
 ```
 
