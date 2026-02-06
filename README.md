@@ -1,173 +1,371 @@
-# AI Hunting
+# AI-Hunting
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=11sqkThyr_Q">
-    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="User Manual — AI Hunting (Quick Summary)" width="600">
+    <img src="https://img.youtube.com/vi/11sqkThyr_Q/maxresdefault.jpg" alt="User Manual — AI-Hunting (Quick Summary)" width="600">
   </a>
 </p>
 
+<p align="center">
+  <strong>Advanced Incident Hunting | Enterprise Threat Detection</strong><br>
+  Version 2.1 | byFranke 2026
+</p>
+
+---
+
+## Table of Contents
+
+1. [Overview](#1-overview)
+2. [Features](#2-features)
+3. [Requirements](#3-requirements)
+4. [Installation and Configuration](#4-installation-and-configuration)
+5. [Execution](#5-execution)
+6. [Scheduling and Automation](#6-scheduling-and-automation)
+7. [Output Files and Reports](#7-output-files-and-reports)
+8. [Security Best Practices](#8-security-best-practices)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Sheep AI Integration](#10-sheep-ai-integration)
+11. [Legal and Licensing](#11-legal-and-licensing)
+12. [Support](#12-support)
+
+---
+
 ## 1. Overview
 
-* The scripts create a logs directory on your desktop: `%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss`.
-* Generate an Excel report: `threat_hunt_report.xlsx`.
-* Create a quarantine folder inside the logs directory: `quarantine`.
-* Require execution as Administrator and PowerShell 7 (pwsh). If pwsh does not exist, they attempt to install it via `winget`.
-* Call a module in `modules\ai-hunting.ps1` (check if it exists and has permissions).
+AI-Hunting is an enterprise-grade threat hunting automation tool designed for Windows environments. It provides forensic artifact collection, advanced IOC detection, cloud intelligence integration, and professional reporting capabilities.
 
-## 2. Requirements
+### Core Capabilities
 
-* Updated Windows 10/11.
-* Account with Administrator privileges (or ability to elevate).
-* PowerShell 7 (pwsh) preferred — but they also work in Windows PowerShell if adapted.
-* Winget available (for automatic installation of PowerShell 7 if necessary).
-* `modules\` directory with `ai-hunting.ps1` present in the same directory as the scripts.
+| Capability | Description |
+|------------|-------------|
+| Forensic Collection | Automated enumeration and hashing of system services |
+| VirusTotal Integration | Cloud-based malware analysis with automatic quarantine |
+| LOLBAS Detection | Living Off The Land Binaries identification |
+| Sheep AI Analysis | AI-powered threat intelligence with MITRE ATT&CK mapping |
+| Executive Reporting | Professional Excel reports with multiple worksheets |
 
-## 3. Preparation (permissions and execution policy)
+### Output Structure
 
-Run PowerShell as Administrator and execute the commands below according to the desired level.
-
-1. Allow execution **temporarily** only in the current session (recommended for testing):
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
+```
+%USERPROFILE%\Desktop\threat_hunt_YYYY-MM-DD_HH-mm-ss\
+    threat_hunt_report.xlsx     # Executive report with all findings
+    sheep_ai_analysis.txt       # AI-generated threat intelligence (optional)
+    forensic_audit.log          # Detailed execution transcript
+    quarantine\                 # Isolated malicious files
 ```
 
-2. Set policy for the current user (recommended for continuous use):
+---
+
+## 2. Features
+
+### 2.1 Forensic Artifact Collection
+
+- Enumeration of all Windows services with executable paths
+- SHA256 hash calculation for each binary (parallelized)
+- Service installation event monitoring (Event ID 7045)
+- Registry startup entry analysis
+- Scheduled task enumeration
+- Driver audit
+
+### 2.2 Cloud Intelligence
+
+- VirusTotal API integration for hash reputation
+- Automatic classification: CLEAN, SUSPICIOUS, CRITICAL
+- Automatic quarantine of malicious binaries
+- LOLBAS database cross-reference
+
+### 2.3 Sheep AI Threat Intelligence
+
+- MITRE ATT&CK framework mapping
+- Advanced Persistent Threat (APT) indicator detection
+- AI-generated remediation guidance
+- Incident response prioritization
+- Comprehensive threat assessment reports
+
+---
+
+## 3. Requirements
+
+### System Requirements
+
+| Requirement | Specification |
+|-------------|---------------|
+| Operating System | Windows 10/11 (updated) |
+| PowerShell | Version 7.x (pwsh) recommended |
+| Privileges | Administrator |
+| Package Manager | Winget (for automatic PS7 installation) |
+
+### External Dependencies
+
+| Dependency | Purpose | Required |
+|------------|---------|----------|
+| VirusTotal API Key | Malware reputation lookup | Yes |
+| Sheep API Token | AI threat intelligence | Optional |
+| ImportExcel Module | Excel report generation | Auto-installed |
+| PSFramework Module | Logging infrastructure | Auto-installed |
+
+---
+
+## 4. Installation and Configuration
+
+### 4.1 Initial Setup
+
+1. Download or clone the repository to your preferred location (e.g., `C:\scripts\AI-Hunting`)
+
+2. Unblock the downloaded files:
+
+```powershell
+Unblock-File -Path "C:\scripts\AI-Hunting\setup.ps1"
+Unblock-File -Path "C:\scripts\AI-Hunting\modules\ai-hunting.ps1"
+```
+
+3. Set execution policy for the current user:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-3. Set policy for the entire machine (requires Admin; less secure):
+### 4.2 Configuration Menu
+
+Run `setup.ps1` as Administrator to access the configuration interface:
 
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
+Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\scripts\AI-Hunting\setup.ps1"
 ```
 
-4. Unblock downloaded file (if necessary):
+The configuration menu provides the following options:
 
-```powershell
-Unblock-File -Path "C:\path\to\ai-hunting.ps1"
+```
+==================== CONFIGURATION MENU ====================
+
+  [1] Configure VirusTotal API Key       [Status]
+  [2] Configure Sheep API Token          [Status]
+  [3] View Sheep AI Terms of Service     [Status]
+  [4] Get Sheep API Token (Open Browser)
+
+  [5] Run AI-Hunting Scan
+  [6] Exit
+
+=============================================================
 ```
 
-5. Run a script **elevated** (executes as Administrator via UAC prompt):
+### 4.3 API Key Management
+
+All credentials are stored securely in `%USERPROFILE%\.hunting\config.json`:
+
+| Feature | Description |
+|---------|-------------|
+| Location | `%USERPROFILE%\.hunting\` |
+| Encryption | Windows DPAPI (user-specific) |
+| Recovery | Keys cannot be retrieved; generate new if lost |
+| Replacement | Select menu option and confirm replacement |
+
+### 4.4 Obtaining API Keys
+
+**VirusTotal API Key:**
+- Register at https://www.virustotal.com
+- Navigate to your profile and copy the API key
+
+**Sheep API Token:**
+- Visit https://sheep.byfranke.com/pages/api.html
+- Review Terms of Service before use
+
+---
+
+## 5. Execution
+
+### 5.1 Standard Execution
+
+**Via Configuration Menu (Recommended):**
 
 ```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',"C:\path\to\ai-hunting.ps1"
+pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\setup.ps1"
 ```
 
-6. Install PowerShell 7 (if `pwsh` does not exist):
+Select option `[5] Run AI-Hunting Scan`
+
+**Direct Execution:**
 
 ```powershell
-winget install --id Microsoft.PowerShell --source winget --silent
+pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\modules\ai-hunting.ps1"
 ```
 
-7. For development/testing — run with bypass only in session (does not change permanent policy):
+### 5.2 Elevated Execution
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\ai-hunting.ps1"
+Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "C:\scripts\AI-Hunting\setup.ps1"'
 ```
 
-## 4. How to run (practical examples)
+### 5.3 Execution Phases
 
-* Run normally (PowerShell 5.x):
+The scan executes in five sequential phases:
+
+| Phase | Description |
+|-------|-------------|
+| 1 | Forensic Artifact Collection |
+| 2 | VirusTotal Cloud Intelligence |
+| 3 | LOLBAS Pattern Detection |
+| 4 | Excel Report Generation |
+| 5 | Sheep AI Analysis (optional) |
+
+---
+
+## 6. Scheduling and Automation
+
+### 6.1 Task Scheduler
+
+Configure daily automated scans at 02:00 with elevated privileges:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
+schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\AI-Hunting\modules\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
 ```
 
-* Run with pwsh (PowerShell 7+):
+### 6.2 Windows Service (NSSM)
+
+For continuous operation, deploy as a Windows service:
+
+1. Download NSSM and place in `C:\nssm\nssm.exe`
+
+2. Install and start the service:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
-```
-
-* Run with elevation (automatically open elevated window):
-
-```powershell
-Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"'
-```
-
-## 5. Scheduling (e.g., schedule via Task Scheduler)
-
-* Schedule with `schtasks` (runs daily at 02:00 with elevated privileges):
-
-```powershell
-schtasks /Create /SC DAILY /TN "AI-Hunting" /TR "pwsh -NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\"" /ST 02:00 /RL HIGHEST /F
-```
-
-## 6. Run in background (service / NSSM)
-
-* Recommended: NSSM to turn into a service:
-
-1. Download nssm.exe and copy to `C:\nssm\nssm.exe`.
-2. Install service:
-
-```powershell
-C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\ai-hunting.ps1\""
+C:\nssm\nssm.exe install AIHunting "C:\Program Files\PowerShell\7\pwsh.exe" "-NoProfile -ExecutionPolicy Bypass -File \"C:\scripts\AI-Hunting\modules\ai-hunting.ps1\""
 C:\nssm\nssm.exe start AIHunting
 ```
 
-## 7. Parameters and logs
+---
 
-* The script creates `threat_hunt_YYYY-MM-DD_HH-mm-ss` directory on the user’s Desktop and generates:
+## 7. Output Files and Reports
 
-  * `threat_hunt_report.xlsx`
-  * `quarantine\` containing quarantined files
-* Check variables at the top of the script: `$logDir`, `$outputExcel`, `$quarantineDir`, `$scriptStartTime`.
+### 7.1 Excel Report Structure
 
-## 8. Best practices and security
+The `threat_hunt_report.xlsx` contains the following worksheets:
 
-* Check contents of `modules\ai-hunting.ps1` before running (audit).
-* Run first in an isolated environment (test machine) before production.
-* Do not set `ExecutionPolicy` as `Unrestricted` globally on production machines.
-* Consider signing the script with a certificate if deploying across multiple hosts:
+| Worksheet | Content |
+|-----------|---------|
+| VT Findings | All services with VirusTotal status |
+| LOLBAS Alerts | Binaries matching LOLBAS patterns |
+| Driver Audit | System driver enumeration |
+| Recent Services | Services installed in last 30 minutes |
+| Startup Entries | Registry Run key entries |
+| Active Tasks | Enabled scheduled tasks |
+| Service Events | Event ID 7045 entries |
+| Executive Dashboard | Summary metrics |
 
-  * Generate self-signed certificate and sign with `Set-AuthenticodeSignature`.
-* Backup logs before automatic cleanup.
-* If the script interacts with network/Internet, evaluate firewall and proxy rules.
+### 7.2 Sheep AI Report
 
-## 9. Common error handling
+The `sheep_ai_analysis.txt` includes:
 
-* **Permission error / Admin required** — open PowerShell as Administrator or use `Start-Process -Verb RunAs`.
-* **pwsh: command not found** — install PowerShell 7 with `winget` (or adjust to `powershell.exe`).
-* **Module not found (`modules\ai-hunting.ps1`)** — confirm `modules` exists in the same directory and file has read permissions.
-* **Antivirus blocked** — review detection; do not disable AV without justification. If internal tool, whitelist via approved process.
-* **Failed to create Excel** — check dependencies (if using COM Excel, Excel must be installed; if using module to generate XLSX, ensure `ImportExcel` module is installed).
+- Threat assessment summary
+- MITRE ATT&CK TTP mapping
+- APT indicator analysis
+- Remediation recommendations
+- Incident response priorities
 
-## 10. Complete example (quick step-by-step)
+---
 
-1. Copy scripts to `C:\scripts`.
-2. Open PowerShell as Administrator.
-3. Unblock:
+## 8. Security Best Practices
 
-```powershell
-Unblock-File -Path "C:\scripts\ai-hunting.ps1"
-Unblock-File -Path "C:\scripts\setup.ps1"
-```
+### Pre-Deployment
 
-4. Adjust ExecutionPolicy for current user:
+- Audit script contents before execution in production environments
+- Test in isolated environments before deployment
+- Maintain script integrity with code signing certificates
 
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+### Operational Security
 
-5. Run:
+- Do not set `ExecutionPolicy` to `Unrestricted` on production systems
+- Evaluate firewall rules for external API communications
+- Backup forensic logs before automated cleanup
+- Whitelist through approved security processes if antivirus blocks execution
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\scripts\ai-hunting.ps1"
-```
+### Credential Management
 
-6. Check folder `%USERPROFILE%\Desktop\threat_hunt_*` for reports and `quarantine`.
+- API keys are encrypted with Windows DPAPI
+- Credentials are user-specific and non-transferable
+- Rotate API keys periodically per organizational policy
 
-## 11. How to verify script ran and find outputs
+---
 
-* Open Explorer → Desktop → look for `threat_hunt_` with timestamp.
-* Open `threat_hunt_report.xlsx` (Excel or LibreOffice).
-* PowerShell log (if implemented) — look for messages in console output; if desired, modify script to write a `run.log` inside `$logDir`.
+## 9. Troubleshooting
 
-## Donation Support
+| Issue | Resolution |
+|-------|------------|
+| Permission error / Admin required | Execute PowerShell as Administrator |
+| pwsh: command not found | Install PowerShell 7: `winget install --id Microsoft.PowerShell --source winget --silent` |
+| Module not found | Verify `modules\ai-hunting.ps1` exists with read permissions |
+| Antivirus blocked | Review detection and whitelist through approved process |
+| Excel generation failed | Ensure ImportExcel module installed: `Install-Module ImportExcel -Force` |
+| VirusTotal API error | Verify API key configuration and rate limits |
+| Sheep AI connection failed | Check network connectivity and token validity |
 
-This tool is maintained through community support. Help keep it active:
+---
 
-[![Donate](https://img.shields.io/badge/Support-Development-blue?style=for-the-badge&logo=github)](https://buy.byfranke.com/b/8wM03kb3u7THeIgaEE)
+## 10. Sheep AI Integration
+
+### 10.1 About Sheep AI
+
+Sheep AI is a specialized threat intelligence platform powered by machine learning models trained on cybersecurity frameworks including MITRE ATT&CK. It provides contextual analysis of threat hunting findings.
+
+### 10.2 Capabilities
+
+- TTP identification and classification
+- APT campaign correlation
+- Vulnerability context
+- Remediation guidance
+- Risk assessment
+
+### 10.3 Configuration
+
+1. Accept Terms of Service (required for first use)
+2. Obtain API token from https://sheep.byfranke.com/pages/api.html
+3. Configure token via setup menu (Option 2)
+
+### 10.4 Usage
+
+After standard scan completion, the system prompts for Sheep AI analysis. Select `Y` to generate an AI-powered threat intelligence report.
+
+---
+
+## 11. Legal and Licensing
+
+### License
+
+This software is licensed under the byFranke License. See [LICENSE](LICENSE) for complete terms.
+
+### Sheep AI Terms
+
+Use of Sheep AI integration is subject to additional terms:
+
+| Document | URL |
+|----------|-----|
+| Privacy Policy | https://sheep.byfranke.com/pages/privacy.html |
+| Terms of Service | https://sheep.byfranke.com/pages/terms.html |
+
+### Copyright
+
+Copyright (c) 2026 byFranke. All rights reserved.
+
+---
+
+## 12. Support
+
+### Contact
+
+For licensing inquiries, technical support, or partnership opportunities:
+
+- Website: https://byfranke.com
+- Contact Form: https://byfranke.com/#Contact
+
+### Development Support
+
+This tool is maintained through community support:
+
+[![Support Development](https://img.shields.io/badge/Support-Development-blue?style=for-the-badge)](https://buy.byfranke.com/b/8wM03kb3u7THeIgaEE)
+
+---
+
+<p align="center">
+  <strong>AI-Hunting</strong> | Advanced Incident Hunting<br>
+  byFranke 2026 | https://byfranke.com
+</p>
